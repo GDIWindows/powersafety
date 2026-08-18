@@ -30,15 +30,18 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.buildozer/android/packages/freetype
-        key: freetype-2.14.1
+        key: freetype-2.13.2
     
     - name: Download freetype manually
       if: steps.cache-freetype.outputs.cache-hit != 'true'
       run: |
         mkdir -p ~/.buildozer/android/packages/freetype
         cd ~/.buildozer/android/packages/freetype
-        wget -O freetype-2.14.1.tar.gz https://github.com/freetype/freetype/releases/download/VER-2-14-1/freetype-2.14.1.tar.gz
-        touch .mark-freetype-2.14.1.tar.gz
+        wget -O freetype-2.13.2.tar.gz https://mirrors.tuna.tsinghua.edu.cn/gnu/freetype/freetype-2.13.2.tar.gz || \
+        wget -O freetype-2.13.2.tar.gz https://mirrors.ustc.edu.cn/gnu/freetype/freetype-2.13.2.tar.gz || \
+        wget -O freetype-2.13.2.tar.gz https://ftp.gnu.org/gnu/freetype/freetype-2.13.2.tar.gz || \
+        wget -O freetype-2.13.2.tar.gz https://mirrors.kernel.org/gnu/freetype/freetype-2.13.2.tar.gz
+        touch .mark-freetype-2.13.2.tar.gz
     
     - name: Build APK
       run: |
