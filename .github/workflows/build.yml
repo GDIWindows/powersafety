@@ -34,10 +34,8 @@ jobs:
     
     - name: Build APK
       run: |
-        # 创建字体目录
         mkdir -p fonts
         
-        # 创建 buildozer.spec
         cat > buildozer.spec << 'EOF'
 [app]
 title = 电力安全题库
@@ -54,7 +52,7 @@ android.sdk = 33
 android.ndk = 28c
 android.ndk_api = 21
 android.archs = armeabi-v7a,arm64-v8a
-requirements = python3,kivy,pillow,pytesseract,requests,android,plyer
+requirements = python3,kivy==2.1.0,pillow,pytesseract,requests,android,plyer
 android.allow_backup = True
 android.app_name = 电力安全题库
 android.display_name = 电力安全题库
@@ -67,14 +65,11 @@ log_level = 2
 warn_on_root = 1
 EOF
         
-        # 修复字体路径
         sed -i 's|C:/Windows/Fonts/simsun.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
         sed -i 's|C:/Windows/Fonts/msyh.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
         
-        # 下载字体
         wget -O fonts/NotoSansCJK.ttc https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/Chinese%20\(Simplified\)/NotoSansCJKsc-Regular.otf || true
         
-        # 打包
         buildozer android debug
       shell: bash
     
