@@ -25,28 +25,30 @@ jobs:
       with:
         python-version: '3.11'
     
-    # 新增一个独立的步骤：提前下载并缓存 freetype
-    - name: Pre-download freetype
-      run: |
-        mkdir -p ~/.buildozer/android/packages/freetype
-        cd ~/.buildozer/android/packages/freetype
-        # 使用官方 GitHub 的可靠下载链接（版本号对应 Buildozer 要求的 2.14.1）
-        wget -O freetype-2.14.1.tar.gz https://github.com/freetype/freetype/releases/download/VER-2-14-1/freetype-2.14.1.tar.gz || \
-        wget -O freetype-2.14.1.tar.gz https://github.com/freetype/freetype/archive/refs/tags/VER-2-14-1.tar.gz
-        # 创建一个标记文件，模拟 Buildozer 的下载完成状态
-        touch .mark-freetype-2.14.1.tar.gz
-    
     - name: Build APK
       run: |
-        # 安装基础依赖
         sudo apt-get update
         sudo apt-get install -y git zip unzip
         pip install --upgrade pip
         pip install buildozer cython
         
+        # === 关键修复：直接修改 python-for-android 的源码 ===
+        # 创建目录并克隆 python-for-android
+        mkdir -p /home/runner/.buildozer/android/platform
+        cd /home/runner/.buildozer/android/platform
+        git clone --depth 1 https://github.com/kivy/python-for-android.git
+        
+        # 修改 freetype 下载地址为 GitHub 镜像（使用 sed 永久替换）
+        cd python-for-android
+        # 找到 freetype 的下载 URL 并替换为 GitHub Release 地址
+        sed -i 's|https://download.savannah.gnu.org/releases/freetype/freetype-.*.tar.gz|https://github.com/freetype/freetype/releases/download/VER-2-14-1/freetype-2.14.1.tar.gz|g' pythonforandroid/recipes/freetype/__init__.py
+        
+        # 返回工作目录
+        cd $GITHUB_WORKSPACE
+        # === 修复结束 ===
+        
         mkdir -p fonts
         
-        # 创建 buildozer.spec
         echo '[app]' > buildozer.spec
         echo 'title = 电力安全题库' >> buildozer.spec
         echo 'package.name = powersafety' >> buildozer.spec
@@ -79,7 +81,8 @@ jobs:
         
         wget -O fonts/NotoSansCJK.ttc https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/Chinese%20\(Simplified\)/NotoSansCJKsc-Regular.otf || true
         
-        # 开始打包
+        # 设置环境变量，让 Buildozer 使用我们修改过的 python-for-android
+        export P4A_REPO_DIR=/home/runner/.buildozer/android/platform/python-for-android
         buildozer android debug
       shell: bash
     
