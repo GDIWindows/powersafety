@@ -27,6 +27,7 @@ jobs:
         pip install buildozer cython
         
         mkdir -p fonts
+        wget -O fonts/NotoSansCJK.ttc https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/Chinese%20\(Simplified\)/NotoSansCJKsc-Regular.otf || true
         
         cat > buildozer.spec << 'EOF'
 [app]
@@ -58,8 +59,6 @@ warn_on_root = 1
 EOF
         
         sed -i 's|C:/Windows/Fonts/simsun.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
-        wget -O fonts/NotoSansCJK.ttc https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/Chinese%20\(Simplified\)/NotoSansCJKsc-Regular.otf || true
-        
         buildozer android debug
       shell: bash
     
