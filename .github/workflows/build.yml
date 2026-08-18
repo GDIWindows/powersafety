@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build APK
 
 on:
   push:
@@ -7,11 +7,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 120
     
     steps:
-    - name: Checkout code
+    - name: Checkout
       uses: actions/checkout@v4
     
     - name: Setup Java
@@ -30,71 +30,52 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y git zip unzip
         pip install buildozer cython
-        
-    - name: Setup Buildozer cache
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.buildozer
-          ~/.android
-          ~/.gradle
-        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec', 'requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-buildozer-
-    
-    - name: Create fonts directory
-      run: |
-        mkdir -p fonts
-        if [ -f "fonts/NotoSansCJK.ttc" ]; then
-          echo "字体文件已存在"
-        else
-          wget -O fonts/NotoSansCJK.ttc https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/Chinese%20\(Simplified\)/NotoSansCJKsc-Regular.otf || true
-        fi
     
     - name: Build APK
-      env:
-        BUILD_SPEC: |
-          [app]
-          title = 电力安全题库
-          package.name = powersafety
-          package.domain = org.example
-          version = 1.0.0
-          source.dir = .
-          source.include_exts = py,png,jpg,kv,atlas,ttf,ttc,otf,xml,json
-          source.main = main.py
-          android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA
-          android.api = 31
-          android.minapi = 21
-          android.sdk = 33
-          android.ndk = 28c
-          android.ndk_api = 21
-          android.archs = armeabi-v7a,arm64-v8a
-          requirements = python3,kivy==2.2.1,pillow,pytesseract,requests,android,plyer
-          android.allow_backup = True
-          android.app_name = 电力安全题库
-          android.display_name = 电力安全题库
-          fullscreen = 0
-          log_level = 2
-          android.accept_sdk_license = True
-
-          [buildozer]
-          log_level = 2
-          warn_on_root = 1
       run: |
-        echo "$BUILD_SPEC" > buildozer.spec
+        # 创建字体目录
+        mkdir -p fonts
+        
+        # 创建 buildozer.spec
+        cat > buildozer.spec << 'EOF'
+[app]
+title = 电力安全题库
+package.name = powersafety
+package.domain = org.example
+version = 1.0.0
+source.dir = .
+source.include_exts = py,png,jpg,kv,atlas,ttf,ttc,otf,xml,json
+source.main = main.py
+android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA
+android.api = 31
+android.minapi = 21
+android.sdk = 33
+android.ndk = 28c
+android.ndk_api = 21
+android.archs = armeabi-v7a,arm64-v8a
+requirements = python3,kivy,pillow,pytesseract,requests,android,plyer
+android.allow_backup = True
+android.app_name = 电力安全题库
+android.display_name = 电力安全题库
+fullscreen = 0
+log_level = 2
+android.accept_sdk_license = True
+
+[buildozer]
+log_level = 2
+warn_on_root = 1
+EOF
+        
+        # 修复字体路径
         sed -i 's|C:/Windows/Fonts/simsun.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
         sed -i 's|C:/Windows/Fonts/msyh.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
         
-        # 设置环境变量，使用更快的镜像
-        export P4A_MIRROR=https://buildozer-mirror.s3.amazonaws.com
+        # 下载字体
+        wget -O fonts/NotoSansCJK.ttc https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/Chinese%20\(Simplified\)/NotoSansCJKsc-Regular.otf || true
         
-        # 重试3次，每次等待时间递增
-        for i in 1 2 3; do
-          echo "尝试打包 (第 $i 次)..."
-          buildozer android debug && break
-          echo "第 $i 次失败，等待30秒后重试..."
-          sleep 30
-        done
+        # 打包
+        buildozer android debug
+      shell: bash
     
     - name: Upload APK
       uses: actions/upload-artifact@v4
