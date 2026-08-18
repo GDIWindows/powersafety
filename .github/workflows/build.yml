@@ -40,43 +40,39 @@ jobs:
           wget -O fonts/NotoSansCJK.ttc https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/Chinese%20\(Simplified\)/NotoSansCJKsc-Regular.otf || true
         fi
     
-    - name: Create buildozer.spec
-      run: |
-        cat > buildozer.spec << 'EOF'
-[app]
-title = 电力安全题库
-package.name = powersafety
-package.domain = org.example
-version = 1.0.0
-source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,ttf,ttc,otf,xml,json
-source.main = main.py
-android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA
-android.api = 31
-android.minapi = 21
-android.sdk = 33
-android.ndk = 23b
-android.arch = armeabi-v7a,arm64-v8a
-requirements = python3,kivy==2.2.1,pillow,pytesseract,requests,android,plyer
-android.allow_backup = True
-android.app_name = 电力安全题库
-android.display_name = 电力安全题库
-fullscreen = 0
-log_level = 2
-android.accept_sdk_license = True
+    - name: Build APK
+      env:
+        BUILD_SPEC: |
+          [app]
+          title = 电力安全题库
+          package.name = powersafety
+          package.domain = org.example
+          version = 1.0.0
+          source.dir = .
+          source.include_exts = py,png,jpg,kv,atlas,ttf,ttc,otf,xml,json
+          source.main = main.py
+          android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA
+          android.api = 31
+          android.minapi = 21
+          android.sdk = 33
+          android.ndk = 23b
+          android.arch = armeabi-v7a,arm64-v8a
+          requirements = python3,kivy==2.2.1,pillow,pytesseract,requests,android,plyer
+          android.allow_backup = True
+          android.app_name = 电力安全题库
+          android.display_name = 电力安全题库
+          fullscreen = 0
+          log_level = 2
+          android.accept_sdk_license = True
 
-[buildozer]
-log_level = 2
-warn_on_root = 1
-EOF
-    
-    - name: Fix font paths in main.py
+          [buildozer]
+          log_level = 2
+          warn_on_root = 1
       run: |
+        echo "$BUILD_SPEC" > buildozer.spec
         sed -i 's|C:/Windows/Fonts/simsun.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
         sed -i 's|C:/Windows/Fonts/msyh.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
-    
-    - name: Build APK
-      run: buildozer android debug
+        buildozer android debug
     
     - name: Upload APK
       uses: actions/upload-artifact@v3
