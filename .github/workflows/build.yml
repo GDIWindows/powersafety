@@ -34,15 +34,7 @@ jobs:
         
         mkdir -p fonts
         
-        # 使用正确的 freetype 版本 2.13.3
-        mkdir -p ~/.buildozer/android/packages/freetype
-        cd ~/.buildozer/android/packages/freetype
-        wget -O freetype-2.13.3.tar.gz https://mirrors.tuna.tsinghua.edu.cn/gnu/freetype/freetype-2.13.3.tar.gz || \
-        wget -O freetype-2.13.3.tar.gz https://ftp.gnu.org/gnu/freetype/freetype-2.13.3.tar.gz
-        touch .mark-freetype-2.13.3.tar.gz
-        
-        cd $GITHUB_WORKSPACE
-        
+        # 创建 buildozer.spec
         echo '[app]' > buildozer.spec
         echo 'title = 电力安全题库' >> buildozer.spec
         echo 'package.name = powersafety' >> buildozer.spec
@@ -75,6 +67,7 @@ jobs:
         
         wget -O fonts/NotoSansCJK.ttc https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/Chinese%20\(Simplified\)/NotoSansCJKsc-Regular.otf || true
         
+        # 不手动下载 freetype，让 buildozer 自己处理
         buildozer android debug
       shell: bash
     
