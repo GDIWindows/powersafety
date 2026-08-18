@@ -15,7 +15,7 @@ jobs:
       uses: actions/checkout@v4
     
     - name: Setup Java
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5  # 升级到 v5
       with:
         distribution: 'temurin'
         java-version: '17'
@@ -23,20 +23,21 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.11'  # 改用更稳定的 3.11
     
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y git zip unzip
+        pip install --upgrade pip
         pip install buildozer cython
     
     - name: Build APK
       run: |
-        # 创建字体目录
+        # 1. 创建字体目录
         mkdir -p fonts
         
-        # 创建 buildozer.spec
+        # 2. 创建 buildozer.spec
         cat > buildozer.spec << 'EOF'
 [app]
 title = 电力安全题库
@@ -66,14 +67,14 @@ log_level = 2
 warn_on_root = 1
 EOF
         
-        # 修复字体路径
+        # 3. 修复字体路径
         sed -i 's|C:/Windows/Fonts/simsun.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
         sed -i 's|C:/Windows/Fonts/msyh.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
         
-        # 下载字体
+        # 4. 下载字体
         wget -O fonts/NotoSansCJK.ttc https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/Chinese%20\(Simplified\)/NotoSansCJKsc-Regular.otf || true
         
-        # 打包
+        # 5. 开始打包 (去掉重试逻辑，让错误直接暴露)
         buildozer android debug
       shell: bash
     
