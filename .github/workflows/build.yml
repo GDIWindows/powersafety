@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     
     steps:
     - name: Checkout code
@@ -30,6 +30,17 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y git zip unzip
         pip install buildozer cython
+        
+    - name: Setup Buildozer cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.buildozer
+          ~/.android
+          ~/.gradle
+        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec', 'requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-buildozer-
     
     - name: Create fonts directory
       run: |
@@ -73,7 +84,17 @@ jobs:
         echo "$BUILD_SPEC" > buildozer.spec
         sed -i 's|C:/Windows/Fonts/simsun.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
         sed -i 's|C:/Windows/Fonts/msyh.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
-        buildozer android debug
+        
+        # 设置环境变量，使用更快的镜像
+        export P4A_MIRROR=https://buildozer-mirror.s3.amazonaws.com
+        
+        # 重试3次，每次等待时间递增
+        for i in 1 2 3; do
+          echo "尝试打包 (第 $i 次)..."
+          buildozer android debug && break
+          echo "第 $i 次失败，等待30秒后重试..."
+          sleep 30
+        done
     
     - name: Upload APK
       uses: actions/upload-artifact@v4
