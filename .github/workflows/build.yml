@@ -27,26 +27,22 @@ jobs:
     
     - name: Build APK
       run: |
-        # 安装依赖
         sudo apt-get update
         sudo apt-get install -y git zip unzip
         pip install --upgrade pip
         pip install buildozer cython
         
-        # 创建目录
-        mkdir -p fonts ~/.buildozer/android/packages/freetype
+        mkdir -p fonts
         
-        # 下载 freetype
+        # 使用正确的 freetype 版本 2.13.3
+        mkdir -p ~/.buildozer/android/packages/freetype
         cd ~/.buildozer/android/packages/freetype
-        wget -O freetype-2.14.1.tar.gz https://mirrors.tuna.tsinghua.edu.cn/gnu/freetype/freetype-2.14.1.tar.gz || \
-        wget -O freetype-2.14.1.tar.gz https://ftp.gnu.org/gnu/freetype/freetype-2.14.1.tar.gz || \
-        wget -O freetype-2.14.1.tar.gz https://buildozer-mirror.s3.amazonaws.com/freetype-2.14.1.tar.gz
-        touch .mark-freetype-2.14.1.tar.gz
+        wget -O freetype-2.13.3.tar.gz https://mirrors.tuna.tsinghua.edu.cn/gnu/freetype/freetype-2.13.3.tar.gz || \
+        wget -O freetype-2.13.3.tar.gz https://ftp.gnu.org/gnu/freetype/freetype-2.13.3.tar.gz
+        touch .mark-freetype-2.13.3.tar.gz
         
-        # 返回项目目录
         cd $GITHUB_WORKSPACE
         
-        # 创建 buildozer.spec
         echo '[app]' > buildozer.spec
         echo 'title = 电力安全题库' >> buildozer.spec
         echo 'package.name = powersafety' >> buildozer.spec
@@ -74,14 +70,11 @@ jobs:
         echo 'log_level = 2' >> buildozer.spec
         echo 'warn_on_root = 1' >> buildozer.spec
         
-        # 修复字体路径
         sed -i 's|C:/Windows/Fonts/simsun.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
         sed -i 's|C:/Windows/Fonts/msyh.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
         
-        # 下载字体
         wget -O fonts/NotoSansCJK.ttc https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/Chinese%20\(Simplified\)/NotoSansCJKsc-Regular.otf || true
         
-        # 打包
         buildozer android debug
       shell: bash
     
