@@ -8,11 +8,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    timeout-minutes: 120
+    timeout-minutes: 90
     
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
     
     - name: Setup Java
       uses: actions/setup-java@v5
@@ -23,57 +22,46 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.9'
     
-    - name: Install dependencies
+    - name: Install
       run: |
-        sudo apt-get update
-        sudo apt-get install -y git zip unzip
         pip install --upgrade pip
         pip install buildozer cython
     
-    - name: Build APK
+    - name: Build
       run: |
-        mkdir -p fonts
-        
-        echo '[app]' > buildozer.spec
-        echo 'title = 电力安全题库' >> buildozer.spec
-        echo 'package.name = powersafety' >> buildozer.spec
-        echo 'package.domain = org.example' >> buildozer.spec
-        echo 'version = 1.0.0' >> buildozer.spec
-        echo 'source.dir = .' >> buildozer.spec
-        echo 'source.include_exts = py,png,jpg,kv,atlas,ttf,ttc,otf,xml,json' >> buildozer.spec
-        echo 'source.main = main.py' >> buildozer.spec
-        echo 'android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA' >> buildozer.spec
-        echo 'android.api = 31' >> buildozer.spec
-        echo 'android.minapi = 21' >> buildozer.spec
-        echo 'android.sdk = 33' >> buildozer.spec
-        echo 'android.ndk = 28c' >> buildozer.spec
-        echo 'android.ndk_api = 21' >> buildozer.spec
-        echo 'android.archs = armeabi-v7a,arm64-v8a' >> buildozer.spec
-        echo 'requirements = python3,kivy==2.1.0,pillow,pytesseract,requests,android,plyer' >> buildozer.spec
-        echo 'android.allow_backup = True' >> buildozer.spec
-        echo 'android.app_name = 电力安全题库' >> buildozer.spec
-        echo 'android.display_name = 电力安全题库' >> buildozer.spec
-        echo 'fullscreen = 0' >> buildozer.spec
-        echo 'log_level = 2' >> buildozer.spec
-        echo 'android.accept_sdk_license = True' >> buildozer.spec
-        echo '' >> buildozer.spec
-        echo '[buildozer]' >> buildozer.spec
-        echo 'log_level = 2' >> buildozer.spec
-        echo 'warn_on_root = 1' >> buildozer.spec
-        
-        sed -i 's|C:/Windows/Fonts/simsun.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
-        sed -i 's|C:/Windows/Fonts/msyh.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
-        
-        wget -O fonts/NotoSansCJK.ttc https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/Chinese%20\(Simplified\)/NotoSansCJKsc-Regular.otf || true
-        
+        cat > buildozer.spec << 'EOF'
+[app]
+title = 电力安全题库
+package.name = powersafety
+package.domain = org.example
+version = 1.0.0
+source.dir = .
+source.include_exts = py,png,jpg,kv,atlas,ttf,ttc,otf,xml,json
+source.main = main.py
+android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA
+android.api = 29
+android.minapi = 21
+android.sdk = 30
+android.ndk = 23b
+android.archs = armeabi-v7a
+requirements = python3,kivy
+android.allow_backup = True
+android.app_name = 电力安全题库
+android.display_name = 电力安全题库
+fullscreen = 0
+log_level = 2
+android.accept_sdk_license = True
+
+[buildozer]
+log_level = 2
+warn_on_root = 1
+EOF
         buildozer android debug
-      shell: bash
     
-    - name: Upload APK
+    - name: Upload
       uses: actions/upload-artifact@v4
       with:
-        name: powersafety-apk
+        name: apk
         path: bin/*.apk
-        retention-days: 30
