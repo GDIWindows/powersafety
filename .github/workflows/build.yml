@@ -25,30 +25,25 @@ jobs:
       with:
         python-version: '3.11'
     
+    # 新增一个独立的步骤：提前下载并缓存 freetype
+    - name: Pre-download freetype
+      run: |
+        mkdir -p ~/.buildozer/android/packages/freetype
+        cd ~/.buildozer/android/packages/freetype
+        # 使用官方 GitHub 的可靠下载链接（版本号对应 Buildozer 要求的 2.14.1）
+        wget -O freetype-2.14.1.tar.gz https://github.com/freetype/freetype/releases/download/VER-2-14-1/freetype-2.14.1.tar.gz || \
+        wget -O freetype-2.14.1.tar.gz https://github.com/freetype/freetype/archive/refs/tags/VER-2-14-1.tar.gz
+        # 创建一个标记文件，模拟 Buildozer 的下载完成状态
+        touch .mark-freetype-2.14.1.tar.gz
+    
     - name: Build APK
       run: |
-        # 安装依赖
+        # 安装基础依赖
         sudo apt-get update
         sudo apt-get install -y git zip unzip
         pip install --upgrade pip
         pip install buildozer cython
         
-        # --- 关键修复开始 ---
-        # 1. 手动克隆 python-for-android
-        mkdir -p .buildozer/android/platform
-        cd .buildozer/android/platform
-        git clone --depth 1 https://github.com/kivy/python-for-android.git
-        
-        # 2. 修改 freetype 下载地址 (替换成多个可靠镜像)
-        cd python-for-android
-        # 将 savannah.gnu.org 的地址替换为更可靠的地址
-        sed -i 's|https://download.savannah.gnu.org/releases/freetype/freetype-.*.tar.gz|https://github.com/freetype/freetype/releases/download/VER-2-13-3/freetype-2.13.3.tar.gz|g' pythonforandroid/recipes/freetype/__init__.py
-        
-        # 回到工作目录
-        cd $GITHUB_WORKSPACE
-        # --- 关键修复结束 ---
-        
-        # 创建字体目录
         mkdir -p fonts
         
         # 创建 buildozer.spec
@@ -79,11 +74,9 @@ jobs:
         echo 'log_level = 2' >> buildozer.spec
         echo 'warn_on_root = 1' >> buildozer.spec
         
-        # 修复字体路径
         sed -i 's|C:/Windows/Fonts/simsun.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
         sed -i 's|C:/Windows/Fonts/msyh.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
         
-        # 下载中文字体
         wget -O fonts/NotoSansCJK.ttc https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/Chinese%20\(Simplified\)/NotoSansCJKsc-Regular.otf || true
         
         # 开始打包
