@@ -14,45 +14,15 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install buildozer
-        run: |
-          pip install buildozer cython
-
       - name: Build APK
         run: |
-          mkdir -p fonts
-          
-          echo '[app]' > buildozer.spec
-          echo 'title = 电力安全题库' >> buildozer.spec
-          echo 'package.name = powersafety' >> buildozer.spec
-          echo 'package.domain = org.example' >> buildozer.spec
-          echo 'version = 1.0.0' >> buildozer.spec
-          echo 'source.dir = .' >> buildozer.spec
-          echo 'source.include_exts = py,png,jpg,kv,atlas,ttf,ttc,otf,xml,json' >> buildozer.spec
-          echo 'source.main = main.py' >> buildozer.spec
-          echo 'android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA' >> buildozer.spec
-          echo 'android.api = 31' >> buildozer.spec
-          echo 'android.minapi = 21' >> buildozer.spec
-          echo 'android.sdk = 33' >> buildozer.spec
-          echo 'android.ndk = 28c' >> buildozer.spec
-          echo 'android.ndk_api = 21' >> buildozer.spec
-          echo 'android.archs = armeabi-v7a' >> buildozer.spec
-          echo 'requirements = python3,kivy==2.1.0,pillow,pytesseract,requests,android,plyer' >> buildozer.spec
-          echo 'android.allow_backup = True' >> buildozer.spec
-          echo 'android.app_name = 电力安全题库' >> buildozer.spec
-          echo 'android.display_name = 电力安全题库' >> buildozer.spec
-          echo 'fullscreen = 0' >> buildozer.spec
-          echo 'log_level = 2' >> buildozer.spec
-          echo 'android.accept_sdk_license = True' >> buildozer.spec
-          echo '' >> buildozer.spec
-          echo '[buildozer]' >> buildozer.spec
-          echo 'log_level = 2' >> buildozer.spec
-          echo 'warn_on_root = 1' >> buildozer.spec
-          
+          pip install buildozer
+          buildozer init
+          sed -i 's/^requirements = .*/requirements = python3,kivy,pillow,pytesseract,requests/' buildozer.spec
           buildozer android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: powersafety-apk
+          name: apk
           path: bin/*.apk
