@@ -7,29 +7,21 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Java
-      uses: actions/setup-java@v5
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-    
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-    
-    - name: Build
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y git zip unzip
-        pip install buildozer cython
-        
-        mkdir -p fonts
-        wget -O fonts/NotoSansCJK.ttc https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/Chinese%20\(Simplified\)/NotoSansCJKsc-Regular.otf || true
-        
-        cat > buildozer.spec << 'EOF'
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install buildozer
+        run: |
+          pip install buildozer cython
+
+      - name: Build APK
+        run: |
+          mkdir -p fonts
+          cat > buildozer.spec << 'EOF'
 [app]
 title = 电力安全题库
 package.name = powersafety
@@ -57,13 +49,10 @@ android.accept_sdk_license = True
 log_level = 2
 warn_on_root = 1
 EOF
-        
-        sed -i 's|C:/Windows/Fonts/simsun.ttc|fonts/NotoSansCJK.ttc|g' main.py || true
-        buildozer android debug
-      shell: bash
-    
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: powersafety-apk
-        path: bin/*.apk
+          buildozer android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: powersafety-apk
+          path: bin/*.apk
